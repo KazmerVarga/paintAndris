@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #fafafa;
+            font-family: 'Inter', sans-serif;
+            color: #1a1a1a;
+            overflow-x: hidden;
+        }
+
+        /* Loading Animation */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fafafa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #e0e0e0;
+            border-top: 2px solid #1a1a1a;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(250, 250, 250, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            border-bottom: 1px solid #e8e8e8;
+            transition: transform 0.3s ease;
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 30px 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px;
+            font-weight: 300;
+            letter-spacing: 3px;
+            color: #1a1a1a;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #1a1a1a;
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-top: 110px;
+            padding: 80px 60px 60px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 64px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            color: #1a1a1a;
+        }
+
+        .hero p {
+            font-size: 16px;
+            color: #666;
+            letter-spacing: 1px;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        /* Gallery */
+        .gallery-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 80px 60px 120px;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 60px;
+        }
+
+        .gallery-item {
+            position: relative;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        .gallery-item:nth-child(1) { animation-delay: 0.1s; }
+        .gallery-item:nth-child(2) { animation-delay: 0.2s; }
+        .gallery-item:nth-child(3) { animation-delay: 0.3s; }
+        .gallery-item:nth-child(4) { animation-delay: 0.4s; }
+        .gallery-item:nth-child(5) { animation-delay: 0.5s; }
+        .gallery-item:nth-child(6) { animation-delay: 0.6s; }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .image-wrapper {
+            position: relative;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1),
+                        box-shadow 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .gallery-item:hover .image-wrapper {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+
+        .image-wrapper img {
+            width: 100%;
+            height: 450px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .gallery-item:hover .image-wrapper img {
+            transform: scale(1.05);
+        }
+
+        .image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+            padding: 30px;
+            transform: translateY(100%);
+            transition: transform 0.4s ease;
+        }
+
+        .gallery-item:hover .image-overlay {
+            transform: translateY(0);
+        }
+
+        .image-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 20px;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .image-info {
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+            letter-spacing: 1px;
+        }
+
+        /* Modal */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(250, 250, 250, 0.98);
+            z-index: 9998;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .modal-backdrop.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 100px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .modal-content-wrapper.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-image-container {
+            max-width: 90%;
+            max-height: 85vh;
+            position: relative;
+            transform: scale(0.95);
+            transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .modal-content-wrapper.active .modal-image-container {
+            transform: scale(1);
+        }
+
+        .modal-image {
+            max-width: 100%;
+            max-height: 85vh;
+            object-fit: contain;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.2);
+        }
+
+        .modal-caption {
+            position: absolute;
+            bottom: -60px;
+            left: 0;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
+            color: #666;
+            letter-spacing: 1px;
+        }
+
+        .close-btn {
+            position: fixed;
+            top: 40px;
+            right: 40px;
+            width: 50px;
+            height: 50px;
+            background: transparent;
+            border: 1px solid #d0d0d0;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a1a1a;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .close-btn.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .close-btn:hover {
+            background: #1a1a1a;
+            border-color: #1a1a1a;
+            color: #fff;
+            transform: rotate(90deg);
+        }
+
+        /* Navigation Arrows */
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: transparent;
+            border: 1px solid #d0d0d0;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a1a1a;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .nav-arrow.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .nav-arrow:hover {
+            background: #1a1a1a;
+            border-color: #1a1a1a;
+            color: #fff;
+        }
+
+        .nav-arrow.prev {
+            left: 40px;
+        }
+
+        .nav-arrow.next {
+            right: 40px;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid #e8e8e8;
+            padding: 60px;
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        /* About Section */
+        .about-section {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 120px 60px;
+            border-top: 1px solid #e8e8e8;
+        }
+
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 100px;
+            align-items: center;
+        }
+
+        .about-text h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 48px;
+            font-weight: 300;
+            letter-spacing: 1px;
+            margin-bottom: 40px;
+            color: #1a1a1a;
+        }
+
+        .about-text p {
+            font-size: 16px;
+            line-height: 1.9;
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .about-image {
+            position: relative;
+        }
+
+        .about-img-placeholder {
+            width: 100%;
+            height: 600px;
+            background: #f0f0f0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .about-img-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .about-img-placeholder::after {
+            content: 'Artist Studio';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 24px;
+            color: #ccc;
+            letter-spacing: 2px;
+        }
+
+        /* Contact Section */
+        .contact-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 120px 60px;
+            text-align: center;
+            border-top: 1px solid #e8e8e8;
+        }
+
+        .contact-content h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 48px;
+            font-weight: 300;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            color: #1a1a1a;
+        }
+
+        .contact-subtitle {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 80px;
+            letter-spacing: 0.5px;
+        }
+
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 60px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .contact-item {
+            text-align: center;
+        }
+
+        .contact-label {
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #999;
+            margin-bottom: 15px;
+        }
+
+        .contact-link {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 20px;
+            color: #1a1a1a;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .contact-link:hover {
+            color: #666;
+        }
+
+        .contact-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 20px;
+            color: #1a1a1a;
+        }
+
+        .contact-social {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .social-link {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 20px;
+            color: #1a1a1a;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .social-link:hover {
+            color: #666;
+        }
+
+        .social-separator {
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 20px 30px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 60px 30px 40px;
+                margin-top: 80px;
+            }
+
+            .hero h1 {
+                font-size: 40px;
+            }
+
+            .gallery-container {
+                padding: 40px 30px 60px;
+            }
+
+            .gallery-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .modal-content-wrapper {
+                padding: 80px 20px;
+            }
+
+            .nav-arrow, .close-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+
+            .about-content {
+                grid-template-columns: 1fr;
+                gap: 50px;
+            }
+
+            .about-section {
+                padding: 60px 30px;
+            }
+
+            .about-text h2 {
+                font-size: 36px;
+            }
+
+            .about-img-placeholder {
+                height: 400px;
+            }
+
+            .contact-section {
+                padding: 60px 30px;
+            }
+
+            .contact-content h2 {
+                font-size: 36px;
+            }
+
+            .contact-info {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo">DEBI</div>
+            <ul class="nav-links">
+                <li><a href="#gallery">Gallery</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+        <h1>Art Collection</h1>
+        <p>Curated works that celebrate the intersection of classical technique and contemporary vision</p>
+    </section>
+
+    <!-- Gallery -->
+    <div class="gallery-container" id="gallery">
+        <div class="gallery-grid" id="galleryGrid"></div>
+    </div>
+
+    <!-- About Section -->
+    <section class="about-section" id="about">
+        <div class="about-content">
+            <div class="about-text">
+                <h2>About Andris</h2>
+                <p>Based in Veresegyház, Hungary, Andris explores the delicate balance between light and shadow, tradition and innovation. Each piece is a meditation on color, texture, and the stories that emerge when paint meets canvas.</p>
+                <p>Working primarily with oils, the focus remains on capturing fleeting moments and emotions, translating them into visual narratives that invite contemplation and connection.</p>
+                <p>The practice is rooted in a deep respect for classical techniques while embracing contemporary expression, creating works that exist at the intersection of timelessness and modernity.</p>
+            </div>
+            <div class="about-image">
+                <div class="about-img-placeholder">
+                    <img src="pic/artist.jpg" alt="Artist at work" onerror="this.style.display='none'">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact-section" id="contact">
+        <div class="contact-content">
+            <h2>Get in Touch</h2>
+            <p class="contact-subtitle">For inquiries about available works, commissions, or collaborations</p>
+            
+            <div class="contact-info">
+                <div class="contact-item">
+                    <div class="contact-label">Email</div>
+                    <a href="mailto:hello@debi.com" class="contact-link">hello@debi.com</a>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-label">Studio</div>
+                    <div class="contact-text">Veresegyház, Hungary</div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-label">Follow</div>
+                    <div class="contact-social">
+                        <a href="#" class="social-link">Instagram</a>
+                        <span class="social-separator">•</span>
+                        <a href="#" class="social-link">Behance</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 DEBI. All rights reserved.</p>
+    </footer>
+
+    <!-- Modal -->
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="close-btn" id="closeBtn">&times;</div>
+    <div class="nav-arrow prev" id="prevBtn">‹</div>
+    <div class="nav-arrow next" id="nextBtn">›</div>
+    <div class="modal-content-wrapper" id="modalWrapper">
+        <div class="modal-image-container">
+            <img src="" alt="" class="modal-image" id="modalImage">
+            <div class="modal-caption" id="modalCaption"></div>
+        </div>
+    </div>
+
+    <script>
+        // Your paintings array - update with actual filenames
+        const paintings = [
+            { file: '1.jpg', title: 'Untitled I', info: '2024 • Oil on Canvas' },
+            { file: '2.jpg', title: 'Untitled II', info: '2024 • Oil on Canvas' },
+            { file: '3.jpg', title: 'Untitled III', info: '2024 • Oil on Canvas' },
+            { file: '4.jpg', title: 'Untitled IV', info: '2024 • Oil on Canvas' },
+            { file: '6.jpg', title: 'Untitled V', info: '2024 • Oil on Canvas' },
+            { file: '7.jpg', title: 'Untitled VI', info: '2024 • Oil on Canvas' },
+            { file: '8.jpg', title: 'Untitled VII', info: '2024 • Oil on Canvas' },
+            { file: '9.jpg', title: 'Untitled VIII', info: '2024 • Oil on Canvas' }
+        ];
+
+        const galleryGrid = document.getElementById('galleryGrid');
+        const modalBackdrop = document.getElementById('modalBackdrop');
+        const modalWrapper = document.getElementById('modalWrapper');
+        const modalImage = document.getElementById('modalImage');
+        const modalCaption = document.getElementById('modalCaption');
+        const closeBtn = document.getElementById('closeBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const loadingScreen = document.getElementById('loadingScreen');
+
+        let currentIndex = 0;
+
+        // Generate gallery items
+        paintings.forEach((painting, index) => {
+            const item = document.createElement('div');
+            item.className = 'gallery-item';
+            item.innerHTML = `
+                <div class="image-wrapper">
+                    <img src="pic/${painting.file}" alt="${painting.title}">
+                    <div class="image-overlay">
+                        <div class="image-title">${painting.title}</div>
+                        <div class="image-info">${painting.info}</div>
+                    </div>
+                </div>
+            `;
+            item.addEventListener('click', () => openModal(index));
+            galleryGrid.appendChild(item);
+        });
+
+        function openModal(index) {
+            currentIndex = index;
+            const painting = paintings[index];
+            modalImage.src = `pic/${painting.file}`;
+            modalCaption.textContent = `${painting.title} — ${painting.info}`;
+            
+            setTimeout(() => {
+                modalBackdrop.classList.add('active');
+                modalWrapper.classList.add('active');
+                closeBtn.classList.add('active');
+                prevBtn.classList.add('active');
+                nextBtn.classList.add('active');
+            }, 10);
+        }
+
+        function closeModal() {
+            modalBackdrop.classList.remove('active');
+            modalWrapper.classList.remove('active');
+            closeBtn.classList.remove('active');
+            prevBtn.classList.remove('active');
+            nextBtn.classList.remove('active');
+        }
+
+        function navigateModal(direction) {
+            currentIndex = (currentIndex + direction + paintings.length) % paintings.length;
+            const painting = paintings[currentIndex];
+            modalImage.style.opacity = '0';
+            setTimeout(() => {
+                modalImage.src = `pic/${painting.file}`;
+                modalCaption.textContent = `${painting.title} — ${painting.info}`;
+                modalImage.style.opacity = '1';
+            }, 200);
+        }
+
+        closeBtn.addEventListener('click', closeModal);
+        modalBackdrop.addEventListener('click', closeModal);
+        prevBtn.addEventListener('click', () => navigateModal(-1));
+        nextBtn.addEventListener('click', () => navigateModal(1));
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (modalWrapper.classList.contains('active')) {
+                if (e.key === 'Escape') closeModal();
+                if (e.key === 'ArrowLeft') navigateModal(-1);
+                if (e.key === 'ArrowRight') navigateModal(1);
+            }
+        });
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Hide loading screen when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+            }, 500);
+        });
+
+        // Image transition
+        modalImage.style.transition = 'opacity 0.3s ease';
+    </script>
+</body>
+</html>
